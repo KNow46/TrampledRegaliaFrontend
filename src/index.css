@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  font-family: 'Press Start 2P', cursive, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #1a1a2e; /* Dark background for game theme */
+  color: #e0e0e0; /* Light text color */
+  line-height: 1.6;
+  overflow: hidden;
+  cursor: url("assets/cursor3.png") 10 10, default;
+}
+
+/*a,*/
+/*button,*/
+/*[role="button"],*/
+/*.clickable {*/
+/*  cursor: url("assets/cursor4.png") 0 0, pointer;*/
+/*}*/
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Basic reset for links */
+a {
+  color: #8d99ae; /* A subtle blue for links */
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Basic form element styling */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  background-color: #2e2e4a;
+  border: 1px solid #4a4a6a;
+  color: #e0e0e0;
+  padding: 8px;
+  margin: 5px 0;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.button-disabled {
+  @apply bg-gray-400 hover:bg-gray-400 cursor-not-allowed;
+
+  background-image: repeating-linear-gradient(
+          45deg,
+          rgba(255,255,255,0.15),
+          rgba(255,255,255,0.15) 10px,
+          transparent 10px,
+          transparent 20px
+  );
+}
+

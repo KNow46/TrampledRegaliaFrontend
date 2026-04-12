@@ -6,51 +6,7 @@ import BuildingMesh from "../components/castle/BuildingMesh";
 import {ArmyInfo} from "../components/castle/ArmyInfo";
 import {BarracksModal} from "../components/castle/BarracksModal";
 import UpgradeModal from "../components/castle/UpgradeModal";
-
-interface BuildingDetails {
-    id: number;
-    level: number;
-    max_level: number;
-    upgrade_cost: any;
-    upgrade_time: number;
-    type: string;
-    stats: { [key: string]: any };
-    stats_next_level: { [key: string]: any };
-    is_max_level: boolean;
-}
-
-interface Building {
-    xFromCenterNotScaled: number;
-    yFromCenterNotScaled: number;
-    width: number;
-    height: number;
-    details: BuildingDetails | null;
-}
-
-interface Buildings {
-    [key: string]: Building;
-}
-
-interface Army {
-    [key: string]: number;
-}
-
-interface TroopInfo {
-    [key: string]: {
-        recruitment_time: number;
-        cost: any;
-        power: number;
-        defense_multiplier: number;
-    };
-}
-
-interface RecruitmentItem {
-    order: number;
-    unit_type: string;
-    quantity: number;
-    time_left: string;
-    microSecondsLeft: number;
-}
+import type {Army, BuildingDetails, Buildings, RecruitmentItem, TroopInfo} from "../types.ts";
 
 
 function parseDuration(durationStr: string): number {
@@ -152,7 +108,7 @@ const CastleView: React.FC = () => {
             const fetchBuildingLevels = async () => {
                 try {
                     const response = await api.get(`/game/castles/${id}/buildings/`);
-                    let buildingsCopy = {...buildings}
+                    const buildingsCopy = {...buildings}
                     for (const [building, stats] of Object.entries(response.data)) {
 
                         buildingsCopy[building.toLowerCase()].details = stats as BuildingDetails;

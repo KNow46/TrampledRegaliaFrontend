@@ -3,18 +3,7 @@ import {useResources} from "../../functions/data";
 import {faArrowUp} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import api from "../../services/api";
-
-interface BuildingDetails {
-    id: number;
-    level: number;
-    max_level: number;
-    upgrade_cost: { [key: string]: number };
-    upgrade_time: number;
-    type: string;
-    stats: { [key: string]: any };
-    stats_next_level: { [key: string]: any };
-    is_max_level: boolean;
-}
+import type { BuildingDetails } from '../../types';
 
 interface UpgradeModalProps {
     closeModal: () => void;

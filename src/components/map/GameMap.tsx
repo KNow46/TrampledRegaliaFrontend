@@ -5,20 +5,7 @@ import CastleMenu from "./CastleMenu";
 import GameTile from "./GameTile";
 import ExternalBuildModal from "./ExternalBuildModal";
 import {wasMouseUpPartOfDrag} from "../../functions/utils";
-
-interface Territory {
-    id: string;
-    q: number;
-    r: number;
-    castle: { id: string } | null;
-    owner: string | null;
-    building: { type: string } | null;
-}
-
-interface Player {
-    id: string;
-    // Add other player properties if available
-}
+import type { Territory, Player } from '../../types';
 
 interface GameMapProps {
     hexWidth: number;

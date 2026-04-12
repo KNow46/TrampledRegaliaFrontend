@@ -1,10 +1,7 @@
-import React from "react";
-
 const HexagonFrame = ({ width = 100, strokeWidth = 4, top = 0, left = 0, color = "black" }) => {
     // Corner-to-corner height
     const height = (2 / Math.sqrt(3)) * width;
 
-    // Wnętrze hexagonu (skrócone o stroke, żeby grubość szła DO ŚRODKA)
     const innerWidth = width - strokeWidth;
     const innerHeight = height - strokeWidth;
 

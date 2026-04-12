@@ -1,23 +1,6 @@
 import HexagonFrame from "./HexGlow";
 import React from "react";
-
-interface Territory {
-    id: string;
-    q: number;
-    r: number;
-    castle: { id: string } | null;
-    owner: string | null;
-    building: { type: string } | null;
-}
-
-interface PixelPos {
-    x: number;
-    y: number;
-}
-
-interface Player {
-    id: string;
-}
+import type { Territory, PixelPos, Player } from '../../types';
 
 interface GameTileProps {
     territory: Territory;
@@ -98,7 +81,7 @@ const GameTile: React.FC<GameTileProps> = ({
                         width: `${hexWidth / 4}px`,
                         height: `${hexWidth / 4}px`,
                     }}
-                    onMouseDown={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+                    onMouseDown={() => {
                         if (wasLastMouseUpPartOfDrag)
                             return
                         setIsBuildMenuOpen(true);

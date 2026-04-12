@@ -1,14 +1,7 @@
 import React, {useEffect, useRef} from "react";
 import {calculateOffSetFromCenter, calculateScale} from "../../functions/utils";
 import LevelTile from "./LevelTile";
-
-interface BuildingDetails {
-    id: number;
-    level: number;
-    max_level: number;
-    upgrade_cost: any;
-    upgrade_time: number;
-}
+import type { BuildingDetails } from '../../types';
 
 interface BuildingMeshProps {
     xFromCenterNotScaled: number;

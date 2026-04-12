@@ -1,5 +1,6 @@
 import {create} from 'zustand'
 import api from "../services/api";
+import type {Resources, Production, ResourceStore, Resource} from '../types';
 
 export const getAuthToken = (): string | null => {
     return localStorage.getItem('access')
@@ -7,26 +8,6 @@ export const getAuthToken = (): string | null => {
 export const getCurrentWorld = (): number | null => {
     const worldId = localStorage.getItem('world_id');
     return worldId ? parseInt(worldId) : 1;
-}
-
-interface Resources {
-    [key: string]: number;
-}
-
-interface Production {
-    [key: string]: number;
-}
-
-interface ResourceStore {
-    resources: Resources;
-    production: Production;
-    error: boolean | string;
-    loading?: boolean;
-    setResource: (resource: string, amount: number) => void;
-    setResources: (resources: Resources) => void;
-    setProduction: (production: Production) => void;
-    hasEnoughResources: (resourcesCost: Resources) => boolean;
-    subtractResources: (resources: Resources) => void;
 }
 
 export const useResources = create<ResourceStore>((set, get) => {
@@ -53,7 +34,7 @@ export const useResources = create<ResourceStore>((set, get) => {
     const updateResources = (productionReminder: { [key: string]: number }) => {
         const {resources, production} = get();
         const updatedResources: Resources = {...resources}
-        for (const [resource, amount] of Object.entries(updatedResources)) {
+        for (const [resource, amount] of Object.entries(updatedResources) as [Resource, number][]) {
             if (!productionReminder[resource]) {
                 productionReminder[resource] = 0
             }
@@ -79,13 +60,13 @@ export const useResources = create<ResourceStore>((set, get) => {
         setProduction: (production: Production) => set({production}),
         hasEnoughResources: (resourcesCost: Resources) => {
             const {resources} = get();
-            return Object.keys(resourcesCost).every(
+            return (Object.keys(resourcesCost) as Resource[]).every(
                 (key) => (resources[key] ?? 0) >= resourcesCost[key]
             );
         },
         subtractResources: (resources: Resources) => set((state) => {
-            let newResources = {...state.resources};
-            for (const [resource, amount] of Object.entries(resources)) {
+            const newResources = {...state.resources};
+            for (const [resource, amount] of Object.entries(resources) as [Resource, number][]) {
                 newResources[resource] = (state.resources[resource] || 0) - amount
             }
             return {resources: newResources};

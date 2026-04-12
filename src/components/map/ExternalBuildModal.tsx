@@ -1,15 +1,7 @@
 import React, {useEffect, useState} from "react";
 import api from "../../services/api";
 import {useResources} from "../../functions/data";
-
-interface BuildInfoItem {
-    cost: { [key: string]: number };
-    production: { [key: string]: number };
-}
-
-interface BuildInfo {
-    [key: string]: BuildInfoItem;
-}
+import type { BuildInfo } from '../../types';
 
 interface ExternalBuildModalProps {
     territoryId: string;

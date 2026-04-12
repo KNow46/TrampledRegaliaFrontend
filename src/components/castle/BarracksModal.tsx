@@ -3,6 +3,14 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faArrowUp} from "@fortawesome/free-solid-svg-icons";
 import api from "../../services/api";
 import {useResources} from "../../functions/data";
+import {
+    type BuildingDetails,
+    type Army,
+    type TroopInfo,
+    type RecruitmentItem,
+    type Resources,
+    RESOURCE_KEYS, type Resource
+} from '../../types';
 
 // Helper function to format seconds to HH:MM:SS
 const formatSecondsToTime = (totalSeconds: number) => {
@@ -14,35 +22,6 @@ const formatSecondsToTime = (totalSeconds: number) => {
         .map(v => v < 10 ? "0" + v : v)
         .join(":");
 };
-
-interface BuildingDetails {
-    id: number;
-    level: number;
-    max_level: number;
-    upgrade_cost: any;
-    upgrade_time: number;
-}
-
-interface Army {
-    [key: string]: number;
-}
-
-interface TroopInfo {
-    [key: string]: {
-        recruitment_time: number;
-        cost: any;
-        power: number;
-        defense_multiplier: number;
-    };
-}
-
-interface RecruitmentItem {
-    order: number;
-    unit_type: string;
-    quantity: number;
-    time_left: string;
-    microSecondsLeft: number;
-}
 
 interface BarracksModalProps {
     closeModal: () => void;
@@ -59,8 +38,6 @@ export const BarracksModal: React.FC<BarracksModalProps> = ({
                                                                 closeModal,
                                                                 buildingName,
                                                                 buildingDetails,
-                                                                army,
-                                                                setArmy,
                                                                 recruitmentQueue,
                                                                 troopsInfo,
                                                                 fetchRecruitmentInfo
@@ -90,10 +67,13 @@ export const BarracksModal: React.FC<BarracksModalProps> = ({
     };
 
     const getTotalCost = () => {
-        const totalCost: { [key: string]: number } = {};
-        for (const [troopName, selectedAmount] of Object.entries(selectedAmounts)) {
+        const totalCost: Resources = Object.fromEntries(
+            RESOURCE_KEYS.map(resource => [resource, 0])
+        ) as Resources;
+
+        for (const [troopName, selectedAmount] of Object.entries(selectedAmounts) ) {
             if (!troopsInfo[troopName]) continue;
-            for (const resource of Object.keys(troopsInfo[troopName].cost)) {
+            for (const resource of Object.keys(troopsInfo[troopName].cost) as (keyof Resources)[]) {
                 if (!totalCost[resource]) {
                     totalCost[resource] = 0;
                 }
@@ -187,7 +167,7 @@ export const BarracksModal: React.FC<BarracksModalProps> = ({
                             <div className="flex gap-3">
                                 {Object.entries(getTotalCost()).length > 0 ? Object.entries(getTotalCost()).map(([resource, amount]) => (
                                     <ResourceItem key={resource} icon={resource} value={amount}
-                                                  hasEnough={(resources[resource] || 0) >= amount}/>
+                                                  hasEnough={(resources[resource as Resource] || 0) >= amount}/>
                                 )) : <p className="text-gray-400">Select troops to see the cost.</p>}
                             </div>
                             <button

@@ -1,8 +1,5 @@
 import React from "react";
-
-interface Army {
-    [key: string]: number;
-}
+import type { Army } from '../../types';
 
 interface ArmyInfoProps {
     army: Army | null;

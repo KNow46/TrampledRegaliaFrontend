@@ -104,4 +104,14 @@ export interface Buildings {
     [key: string]: Building;
 }
 
+export interface PathStepItem {
+    territory_id: number;
+    target_progress?: number; // Optional, defaults to 1.0 on backend
+}
+
+export interface SetPathRequest {
+    army_id: number;
+    path: PathStepItem[];
+}
+
 

@@ -24,7 +24,8 @@ function parseDuration(durationStr: string): number {
 
 const CastleView: React.FC = () => {
     const location = useLocation();
-    const [id, setId] = useState<string | null>(null);
+    const urlParams = new URLSearchParams(location.search);
+    const id = urlParams.get('id');
     const [army, setArmy] = useState<Army | null>(null);
     const [openedModal, setOpenedModal] = useState<string | null>(null);
     const [recruitmentQueue, setRecruitmentQueue] = useState<RecruitmentItem[]>([]);
@@ -97,45 +98,44 @@ const CastleView: React.FC = () => {
         }
     };
 
-    useEffect(() => {
-        const urlParams = new URLSearchParams(location.search);
-        const castleId = urlParams.get('id');
-        setId(castleId);
-    }, [location]);
+    // useEffect(() => {
+    //     const urlParams = new URLSearchParams(location.search);
+    //     const castleId = urlParams.get('id');
+    //     setId(castleId);
+    // }, [location]);
 
     useEffect(() => {
-        if (id) {
-            const fetchBuildingLevels = async () => {
-                try {
-                    const response = await api.get(`/game/castles/${id}/buildings/`);
-                    const buildingsCopy = {...buildings}
-                    for (const [building, stats] of Object.entries(response.data)) {
+        const fetchBuildingLevels = async () => {
+            try {
+                const response = await api.get(`/game/castles/${id}/buildings/`);
+                const buildingsCopy = {...buildings}
+                for (const [building, stats] of Object.entries(response.data)) {
 
-                        buildingsCopy[building.toLowerCase()].details = stats as BuildingDetails;
-                    }
-                    setBuildings(buildingsCopy)
-                } catch (error) {
-                    console.error("Failed to fetch building levels:", error);
+                    buildingsCopy[building.toLowerCase()].details = stats as BuildingDetails;
                 }
-            };
-            const fetchArmy = async () => {
-                try {
-                    const response = await api.get(`game/castles/${id}/army/`)
-                    setArmy(response.data.units);
-                } catch (error) {
-                    console.error("Failed to fetch building levels:", error);
-                }
+                setBuildings(buildingsCopy)
+            } catch (error) {
+                console.error("Failed to fetch building levels:", error);
             }
-            fetchBuildingLevels();
-            fetchArmy();
+        };
+        const fetchArmy = async () => {
+            try {
+                const response = await api.get(`game/castles/${id}/army/`)
+                setArmy(response.data.units);
+            } catch (error) {
+                console.error("Failed to fetch building levels:", error);
+            }
         }
-    }, [id, buildings]);
+        fetchBuildingLevels();
+        fetchArmy();
+        fetchRecruitmentInfo();
+    }, []);
 
-    useEffect(() => {
-        if (buildings.barracks.details) {
-            fetchRecruitmentInfo();
-        }
-    }, [buildings.barracks.details]);
+    // useEffect(() => {
+    //     if (buildings.barracks.details) {
+    //         ;
+    //     }
+    // }, [buildings.barracks.details]);
 
     useEffect(() => {
         const interval = setInterval(() => {

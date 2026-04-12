@@ -5,7 +5,7 @@ import CastleMenu from "./CastleMenu";
 import GameTile from "./GameTile";
 import ExternalBuildModal from "./ExternalBuildModal";
 import {wasMouseUpPartOfDrag} from "../../functions/utils";
-import type { Territory, Player } from '../../types';
+import type { Territory, Player, PathStepItem, SetPathRequest } from '../../types';
 
 interface GameMapProps {
     hexWidth: number;
@@ -39,6 +39,12 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
     const mapHeight = 5000
     const downEventRef = useRef<MouseEvent | null>(null);
 
+    // New state for army movement
+    const [pathSelectionMode, setPathSelectionMode] = useState<boolean>(false);
+    const [selectedArmyId, setSelectedArmyId] = useState<number | null>(null);
+    const [currentPath, setCurrentPath] = useState<PathStepItem[]>([]);
+    const [armies, setArmies] = useState([]);
+
     // Fetch castles from the backend
     useEffect(() => {
         const fetchTerritories = async () => {
@@ -57,8 +63,20 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
                 console.error('Error fetching castles:', error);
             }
         }
+        const fetchArmies = async () => {
+            try {
+                const response = await api.get(`/game/armies/?world_id=${worldId}`);
+                console.log(response.data)
+                setArmies(response.data);
+            } catch (error) {
+                console.error('Error fetching castles:', error);
+            }
+        }
+
         fetchTerritories();
         fetchPlayer();
+        fetchArmies();
+
     }, [worldId]);
 
     useEffect(() => {
@@ -121,6 +139,37 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
         }
         setPosition({x: newX, y: newY});
     };
+
+    const handleConfirmPath = async () => {
+        if (selectedArmyId === null || currentPath.length === 0) {
+            console.error("No army selected or path is empty.");
+            return;
+        }
+
+        const requestBody: SetPathRequest = {
+            army_id: selectedArmyId,
+            path: currentPath,
+        };
+
+        try {
+            await api.post("/game/armies/path-step/", requestBody);
+            console.log("Army path set successfully!");
+            // Optionally, refetch territories or update army state
+        } catch (error) {
+            console.error("Error setting army path:", error);
+        } finally {
+            setPathSelectionMode(false);
+            setSelectedArmyId(null);
+            setCurrentPath([]);
+        }
+    };
+
+    const handleCancelPath = () => {
+        setPathSelectionMode(false);
+        setSelectedArmyId(null);
+        setCurrentPath([]);
+    };
+
     return (
         <div>
             <div
@@ -158,6 +207,11 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
                             wasLastMouseUpPartOfDrag={wasLastMouseUpPartOfDrag}
                             setIsBuildMenuOpen={setIsBuildMenuOpen}
                             setSelectedTerritoryId={setSelectedTerritoryId}
+                            // New props for army movement
+                            pathSelectionMode={pathSelectionMode}
+                            currentPath={currentPath}
+                            setCurrentPath={setCurrentPath}
+                            selectedArmyId={selectedArmyId}
                         />)
                     })
                     }
@@ -166,7 +220,12 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
             </div>
             {isCastleMenuOpen && selectedCastleId &&
                 <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
-                    <CastleMenu setIsOpen={setIsCastleMenuOpen} selectedCastleId={selectedCastleId}/>
+                    <CastleMenu
+                        setIsOpen={setIsCastleMenuOpen}
+                        selectedCastleId={selectedCastleId}
+                        setPathSelectionMode={setPathSelectionMode} // Pass setter to CastleMenu
+                        setSelectedArmyId={setSelectedArmyId} // Pass setter to CastleMenu
+                    />
                 </div>
             }
             {isBuildMenuOpen && selectedTerritoryId &&
@@ -175,6 +234,24 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
                     setIsOpen={setIsBuildMenuOpen}
                 />
             }
+
+            {pathSelectionMode && (
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-800 p-4 rounded-lg shadow-lg z-50">
+                    <p className="text-white mb-2">Select path for army {selectedArmyId}. Current path length: {currentPath.length}</p>
+                    <button
+                        onClick={handleConfirmPath}
+                        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2"
+                    >
+                        Confirm Path
+                    </button>
+                    <button
+                        onClick={handleCancelPath}
+                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

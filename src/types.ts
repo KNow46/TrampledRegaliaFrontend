@@ -8,8 +8,18 @@ export const RESOURCE_KEYS = [
 
 export type Resource = typeof RESOURCE_KEYS[number];
 
+export interface Unit {
+    unit_type: string;
+    amount: number;
+}
+
 export interface Army {
-    [key: string]: number;
+    id: number;
+    from_territory: number;
+    to_territory: number;
+    is_moving: boolean;
+    movement_progress: number;
+    units: Unit[];
 }
 
 export interface BuildingDetails {

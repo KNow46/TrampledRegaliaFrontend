@@ -98,6 +98,7 @@ const GameTile: React.FC<GameTileProps> = ({
                 }}
                 onClick={handleTileClick}
             />
+            {territory.id}
             {player && territory.owner === player.id &&
                 <HexagonFrame
                     left={0}

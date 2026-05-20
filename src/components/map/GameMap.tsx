@@ -6,6 +6,8 @@ import GameTile from "./GameTile";
 import ExternalBuildModal from "./ExternalBuildModal";
 import {wasMouseUpPartOfDrag} from "../../functions/utils";
 import type { Territory, Player, PathStepItem, SetPathRequest } from '../../types';
+import { Army } from './Army';
+import armyImage from '../../../public/images/armyBlue.png';
 
 interface GameMapProps {
     hexWidth: number;
@@ -43,7 +45,7 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
     const [pathSelectionMode, setPathSelectionMode] = useState<boolean>(false);
     const [selectedArmyId, setSelectedArmyId] = useState<number | null>(null);
     const [currentPath, setCurrentPath] = useState<PathStepItem[]>([]);
-    const [armies, setArmies] = useState([]);
+    const [armies, setArmies] = useState<Army[]>([]);
 
     // Fetch castles from the backend
     useEffect(() => {
@@ -215,6 +217,18 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
                         />)
                     })
                     }
+                    {armies.map((army: Army) => (
+                        <Army
+                            key={army.id}
+                            fromTerritoryId={army.from_territory}
+                            toTerritoryId={army.to_territory}
+                            movementProgress={army.movement_progress}
+                            hexWidth={hexWidth}
+                            bannerImage={armyImage}
+                            territories={territories}
+                            hexToPixel={hexToPixel}
+                        />
+                    ))}
 
                 </div>
             </div>

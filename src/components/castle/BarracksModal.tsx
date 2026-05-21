@@ -49,7 +49,7 @@ export const BarracksModal: React.FC<BarracksModalProps> = ({
         if (buildingDetails) {
             fetchRecruitmentInfo();
         }
-    }, [buildingDetails, fetchRecruitmentInfo]);
+    }, [buildingDetails]);
 
 
     const recruitTroop = async (troopName: string, quantity: number) => {

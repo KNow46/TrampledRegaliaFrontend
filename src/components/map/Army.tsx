@@ -9,6 +9,9 @@ interface ArmyProps {
     bannerImage: string;
     territories: Territory[];
     hexToPixel: (q: number, r: number, size: number) => { x: number; y: number };
+    openSelectionMode: () => void;
+    setSelectedArmyId: () => void;
+    handleClick: () => void;
 }
 
 export const Army: React.FC<ArmyProps> = ({
@@ -18,7 +21,8 @@ export const Army: React.FC<ArmyProps> = ({
     hexWidth,
     bannerImage,
     territories,
-    hexToPixel
+    hexToPixel,
+    handleClick
 }) => {
     const fromTerritory = territories.find(t => t.id === fromTerritoryId);
     const toTerritory = territories.find(t => t.id === toTerritoryId);
@@ -41,6 +45,7 @@ export const Army: React.FC<ArmyProps> = ({
             src={bannerImage}
             alt="Army"
             className="absolute"
+            onClick={handleClick}
             style={{
                 left: `${currentPixelX}px`,
                 top: `${currentPixelY}px`,

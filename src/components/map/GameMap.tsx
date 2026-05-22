@@ -5,7 +5,7 @@ import CastleMenu from "./CastleMenu";
 import GameTile from "./GameTile";
 import ExternalBuildModal from "./ExternalBuildModal";
 import {wasMouseUpPartOfDrag} from "../../functions/utils";
-import type { Territory, Player, PathStepItem, SetPathRequest } from '../../types';
+import type {Territory, Player, PathStepItem, SetPathRequest, Unit} from '../../types';
 import { Army } from './Army';
 import armyImage from '../../../public/images/armyBlue.png';
 
@@ -40,6 +40,9 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
     const mapWidth = 5000
     const mapHeight = 5000
     const downEventRef = useRef<MouseEvent | null>(null);
+    const [selectedUnitsAmount, setSelectedUnitsAmount] = useState<Unit[]>([]);
+    const [maxSelectedUnitsAmount, setMaxSelectedUnitsAmount] = useState<Unit[]>([]);
+
 
     // New state for army movement
     const [pathSelectionMode, setPathSelectionMode] = useState<boolean>(false);
@@ -150,6 +153,7 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
 
         const requestBody: SetPathRequest = {
             army_id: selectedArmyId,
+            army_units: selectedUnitsAmount,
             path: currentPath,
         };
 
@@ -227,6 +231,16 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
                             bannerImage={armyImage}
                             territories={territories}
                             hexToPixel={hexToPixel}
+                            openSelectionMode={() => setPathSelectionMode(true)}
+                            setSelectedArmyId={() => setSelectedArmyId(army.id)}
+                            handleClick={() => {
+                                console.log(army.units)
+                                console.log(army)
+                                setPathSelectionMode(true)
+                                setSelectedArmyId(army.id)
+                                setSelectedUnitsAmount(army.units)
+                                setMaxSelectedUnitsAmount(army.units)
+                            }}
                         />
                     ))}
 

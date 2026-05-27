@@ -8,6 +8,7 @@ import {wasMouseUpPartOfDrag} from "../../functions/utils";
 import type {Territory, Player, PathStepItem, SetPathRequest, Unit} from '../../types';
 import { Army } from './Army';
 import armyImage from '../../../public/images/armyBlue.png';
+import {PathSelection} from "./PathSelection.tsx";
 
 interface GameMapProps {
     hexWidth: number;
@@ -239,7 +240,7 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
                                 setPathSelectionMode(true)
                                 setSelectedArmyId(army.id)
                                 setSelectedUnitsAmount(army.units)
-                                setMaxSelectedUnitsAmount(army.units)
+                                setMaxSelectedUnitsAmount(structuredClone(army.units))
                             }}
                         />
                     ))}
@@ -263,23 +264,16 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
                 />
             }
 
-            {pathSelectionMode && (
-                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-800 p-4 rounded-lg shadow-lg z-50">
-                    <p className="text-white mb-2">Select path for army {selectedArmyId}. Current path length: {currentPath.length}</p>
-                    <button
-                        onClick={handleConfirmPath}
-                        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2"
-                    >
-                        Confirm Path
-                    </button>
-                    <button
-                        onClick={handleCancelPath}
-                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                    >
-                        Cancel
-                    </button>
-                </div>
-            )}
+            {pathSelectionMode &&
+                <PathSelection
+                    handleCancelPath={handleCancelPath}
+                    handleConfirmPath={handleConfirmPath}
+                    selectedArmyId={selectedArmyId}
+                    currentPath={currentPath}
+                    selectedUnitsAmount={selectedUnitsAmount}
+                    setSelectedUnitsAmount={setSelectedUnitsAmount}
+                    maxSelectedUnitsAmount={maxSelectedUnitsAmount}
+                />}
         </div>
     );
 };

@@ -14,6 +14,5 @@ export const calculateOffSetFromCenter = (coordinate: number): number => {
 export const wasMouseUpPartOfDrag = (downEvent: MouseEvent, upEvent: MouseEvent, threshold = 5): boolean => {
     const dx = upEvent.clientX - downEvent.clientX;
     const dy = upEvent.clientY - downEvent.clientY;
-    console.log(upEvent.clientX, downEvent.clientX);
     return Math.sqrt(dx * dx + dy * dy) > threshold;
 };

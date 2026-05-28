@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useRef} from 'react';
 import api from '../../services/api';
-import {getCurrentWorld} from "../../functions/data";
+import {getCurrentWorld, useArmies} from "../../functions/data"; // Import useArmies
 import CastleMenu from "./CastleMenu";
 import GameTile from "./GameTile";
 import ExternalBuildModal from "./ExternalBuildModal";
@@ -49,16 +49,17 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
     const [pathSelectionMode, setPathSelectionMode] = useState<boolean>(false);
     const [selectedArmyId, setSelectedArmyId] = useState<number | null>(null);
     const [currentPath, setCurrentPath] = useState<PathStepItem[]>([]);
-    const [armies, setArmies] = useState<Army[]>([]);
+    // Use useArmies hook
+    const {armies, loading: armiesLoading, error: armiesError, fetchArmies} = useArmies();
 
-    // Fetch castles from the backend
+    // Fetch territories and player from the backend
     useEffect(() => {
         const fetchTerritories = async () => {
             try {
                 const response = await api.get(`/game/territories/?world_id=${worldId}`);
                 setTerritories(response.data);
             } catch (error) {
-                console.error('Error fetching castles:', error);
+                console.error('Error fetching territories:', error);
             }
         };
         const fetchPlayer = async () => {
@@ -66,23 +67,12 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
                 const response = await api.get(`/game/player/?world_id=${worldId}`);
                 setPlayer(response.data);
             } catch (error) {
-                console.error('Error fetching castles:', error);
-            }
-        }
-        const fetchArmies = async () => {
-            try {
-                const response = await api.get(`/game/armies/?world_id=${worldId}`);
-                console.log(response.data)
-                setArmies(response.data);
-            } catch (error) {
-                console.error('Error fetching castles:', error);
+                console.error('Error fetching player:', error);
             }
         }
 
         fetchTerritories();
         fetchPlayer();
-        fetchArmies();
-
     }, [worldId]);
 
     useEffect(() => {
@@ -167,6 +157,7 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
         } finally {
             setPathSelectionMode(false);
             setSelectedArmyId(null);
+            fetchArmies();
             setCurrentPath([]);
         }
     };
@@ -235,8 +226,6 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
                             openSelectionMode={() => setPathSelectionMode(true)}
                             setSelectedArmyId={() => setSelectedArmyId(army.id)}
                             handleClick={() => {
-                                console.log(army.units)
-                                console.log(army)
                                 setPathSelectionMode(true)
                                 setSelectedArmyId(army.id)
                                 setSelectedUnitsAmount(army.units)

@@ -11,6 +11,10 @@ export type Resource = typeof RESOURCE_KEYS[number];
 export interface Unit {
     unit_type: string;
     amount: number;
+    stats: {
+        movement_speed: number;
+        [key: string]: any; // Allow other stats
+    };
 }
 
 export interface Army {
@@ -20,6 +24,8 @@ export interface Army {
     is_moving: boolean;
     movement_progress: number;
     units: Unit[];
+    path_steps: PathStepItem[]; // Added path_steps
+    last_movement_update: number; // Added last_movement_update (timestamp)
 }
 
 export interface BuildingDetails {

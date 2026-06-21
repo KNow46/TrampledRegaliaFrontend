@@ -98,7 +98,6 @@ const GameTile: React.FC<GameTileProps> = ({
                 }}
                 onClick={handleTileClick}
             />
-            {territory.id}
             {player && territory.owner === player.id &&
                 <HexagonFrame
                     left={0}
@@ -106,6 +105,15 @@ const GameTile: React.FC<GameTileProps> = ({
                     width={hexWidth}
                     strokeWidth={30}
                     color={"#14d4ff"}
+                />
+            }
+            {player && territory.owner && territory.owner !== player.id &&
+                <HexagonFrame
+                    left={0}
+                    top={0}
+                    width={hexWidth}
+                    strokeWidth={30}
+                    color={"#ff0000"}
                 />
             }
             {isTerritoryInPath && pathSelectionMode && (

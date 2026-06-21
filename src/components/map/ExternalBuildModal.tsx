@@ -100,7 +100,7 @@ const ExternalBuildModal: React.FC<ExternalBuildModalProps> = ({territoryId, set
                                         alt={buildingName}
                                         className="h-8 w-8 rounded-md"
                                     />
-                                    {buildingName}
+                                    {buildingName.replace("_", " ")}
                                 </button>
                             ))}
                         </div>
@@ -161,7 +161,7 @@ const ExternalBuildModal: React.FC<ExternalBuildModalProps> = ({territoryId, set
                             setIsOpen(false)
                         }}
                     >
-                        Build {selectedBuilding}
+                        Build {selectedBuilding.replace("_", " ")}
                     </button>
                 </div>
             </div>

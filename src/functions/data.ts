@@ -88,7 +88,6 @@ export const useArmies = create<ArmyStore>((set, get) => {
     let lastUpdate = Date.now();
 
     const getMovementSpeed = (units: Unit[]): number => {
-        console.log(units)
         if (!units || units.length === 0) {
             return 0;
         }

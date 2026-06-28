@@ -35,6 +35,7 @@ const GameTile: React.FC<GameTileProps> = ({
                                                setCurrentPath,
                                                selectedArmyId,
                                            }) => {
+    const isOwnedByPlayer = player !== null && Number(territory.owner) === player.id;
 
     const getImagePath = (): string => {
         if (territory.castle)
@@ -69,9 +70,12 @@ const GameTile: React.FC<GameTileProps> = ({
             }
         } else {
             // Existing logic for opening castle/build menu
-            if (territory.castle) {
+            if (territory.castle && isOwnedByPlayer) {
                 setIsCastleMenuOpen(true);
                 setSelectedCastleId(territory.castle.id);
+            } else if (territory.castle) {
+                setIsCastleMenuOpen(false);
+                setSelectedCastleId(null);
             }
         }
     };
@@ -98,7 +102,7 @@ const GameTile: React.FC<GameTileProps> = ({
                 }}
                 onClick={handleTileClick}
             />
-            {player && territory.owner === player.id &&
+            {isOwnedByPlayer &&
                 <HexagonFrame
                     left={0}
                     top={0}
@@ -107,7 +111,7 @@ const GameTile: React.FC<GameTileProps> = ({
                     color={"#14d4ff"}
                 />
             }
-            {player && territory.owner && territory.owner !== player.id &&
+            {player && territory.owner && Number(territory.owner) !== player.id &&
                 <HexagonFrame
                     left={0}
                     top={0}
@@ -125,7 +129,7 @@ const GameTile: React.FC<GameTileProps> = ({
                     color={"#ffffff"} // Gold color for path selection
                 />
             )}
-            {player && territory.owner === player.id && !territory.castle && !territory.building && (
+            {isOwnedByPlayer && !territory.castle && !territory.building && (
                 <div
                     className={`absolute top-0 left-0 select-none`}
                     style={{

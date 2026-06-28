@@ -4,9 +4,10 @@ import {getCurrentWorld, useArmies, useTerritories} from "../../functions/data";
 import CastleMenu from "./CastleMenu";
 import GameTile from "./GameTile";
 import ExternalBuildModal from "./ExternalBuildModal";
+import ArmyStatusPanel from "./ArmyStatusPanel";
 import {wasMouseUpPartOfDrag} from "../../functions/utils";
-import type {Territory, Player, PathStepItem, SetPathRequest, Unit} from '../../types';
-import { Army } from './Army';
+import type {Territory, Player, PathStepItem, SetPathRequest, Unit, Army as ArmyData} from '../../types';
+import { Army as ArmyMarker } from './Army';
 import armyImage from '../../../public/images/armyBlue.png';
 import enemyArmyImage from '../../../public/images/armyRed.png';
 import {PathSelection} from "./PathSelection.tsx";
@@ -26,7 +27,7 @@ const hexToPixel = (q: number, r: number, size: number) => {
 const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
     // Territories come from the shared store; they refresh automatically after each army backend sync,
     // which means ownership changes (conquests) are reflected without any extra manual calls.
-    const {territories, fetchTerritories} = useTerritories();
+    const {territories} = useTerritories();
     const [position, setPosition] = useState({x: 0, y: 0});
     const [wasLastMouseUpPartOfDrag, setWasLastMouseUpPartOfDrag] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
@@ -46,6 +47,7 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
     const downEventRef = useRef<MouseEvent | null>(null);
     const [selectedUnitsAmount, setSelectedUnitsAmount] = useState<Unit[]>([]);
     const [maxSelectedUnitsAmount, setMaxSelectedUnitsAmount] = useState<Unit[]>([]);
+    const [selectedEnemyArmy, setSelectedEnemyArmy] = useState<ArmyData | null>(null);
 
 
     // New state for army movement
@@ -81,6 +83,20 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
         setPosition({x: newX, y: newY});
         setPreviosHexWidth(hexWidth);
     }, [hexWidth, previosHexWidth, mapWindowWidth, mapWindowHeight, position.x, position.y]);
+
+    useEffect(() => {
+        if (!selectedEnemyArmy) {
+            return;
+        }
+
+        const refreshedEnemyArmy = armies.find((army) => army.id === selectedEnemyArmy.id);
+        if (!refreshedEnemyArmy) {
+            setSelectedEnemyArmy(null);
+            return;
+        }
+
+        setSelectedEnemyArmy(refreshedEnemyArmy);
+    }, [armies, selectedEnemyArmy]);
 
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         setIsDragging(true);
@@ -163,6 +179,28 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
         setCurrentPath([]);
     };
 
+    const handleArmyClick = (army: ArmyData) => {
+        const isFriendlyArmy = player !== null && army.owner === player.id;
+
+        setIsCastleMenuOpen(false);
+
+        if (isFriendlyArmy) {
+            setSelectedEnemyArmy(null);
+            setPathSelectionMode(true)
+            setSelectedArmyId(army.id)
+            setSelectedUnitsAmount(army.units)
+            setMaxSelectedUnitsAmount(structuredClone(army.units))
+            return;
+        }
+
+        setPathSelectionMode(false);
+        setSelectedArmyId(null);
+        setCurrentPath([]);
+        setSelectedUnitsAmount([]);
+        setMaxSelectedUnitsAmount([]);
+        setSelectedEnemyArmy(army);
+    };
+
     return (
         <div>
             <div
@@ -208,8 +246,8 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
                         />)
                     })
                     }
-                    {armies.map((army: Army) => (
-                        <Army
+                    {armies.map((army: ArmyData) => (
+                        <ArmyMarker
                             key={army.id}
                             fromTerritoryId={army.from_territory}
                             toTerritoryId={army.to_territory}
@@ -220,12 +258,7 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
                             hexToPixel={hexToPixel}
                             openSelectionMode={() => setPathSelectionMode(true)}
                             setSelectedArmyId={() => setSelectedArmyId(army.id)}
-                            handleClick={() => {
-                                setPathSelectionMode(true)
-                                setSelectedArmyId(army.id)
-                                setSelectedUnitsAmount(army.units)
-                                setMaxSelectedUnitsAmount(structuredClone(army.units))
-                            }}
+                            handleClick={() => handleArmyClick(army)}
                         />
                     ))}
 
@@ -247,6 +280,14 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
                     setIsOpen={setIsBuildMenuOpen}
                 />
             }
+
+            {selectedEnemyArmy && (
+                <ArmyStatusPanel
+                    title="Enemy army"
+                    units={selectedEnemyArmy.units}
+                    onClose={() => setSelectedEnemyArmy(null)}
+                />
+            )}
 
             {pathSelectionMode &&
                 <PathSelection

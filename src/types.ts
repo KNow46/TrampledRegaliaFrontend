@@ -104,6 +104,7 @@ export interface ResourceStore {
     setResource: (resource: string, amount: number) => void;
     setResources: (resources: Resources) => void;
     setProduction: (production: Production) => void;
+    refreshResources: () => Promise<void>;
     hasEnoughResources: (resourcesCost: Resources) => boolean;
     subtractResources: (resources: Resources) => void;
 }

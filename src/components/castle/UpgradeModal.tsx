@@ -24,7 +24,7 @@ const formatBuildingNameForImage = (name: string): string => {
 
 
 const UpgradeModal: React.FC<UpgradeModalProps> = ({closeModal, buildingName, buildingDetails, setBuildingDetails}) => {
-    const {resources, hasEnoughResources, subtractResources} = useResources();
+    const {resources, hasEnoughResources, subtractResources, refreshResources} = useResources();
 
     const upgradeBuilding = async (cost: { [key: string]: number }) => {
         try {
@@ -36,6 +36,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({closeModal, buildingName, bu
                 }
             );
             subtractResources(cost);
+            await refreshResources();
             setBuildingDetails({
                 ...buildingDetails,
                 stats: response.data.stats,

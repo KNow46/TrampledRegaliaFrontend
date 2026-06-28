@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import api from "../../services/api";
-import {useResources} from "../../functions/data";
+import {useResources, useTerritories} from "../../functions/data";
 import type { BuildInfo } from '../../types';
 
 interface ExternalBuildModalProps {
@@ -16,9 +16,11 @@ const formatBuildingNameForImage = (name: string): string => {
 };
 
 const ExternalBuildModal: React.FC<ExternalBuildModalProps> = ({territoryId, setIsOpen}) => {
-    const {resources, hasEnoughResources} = useResources();
+    const {resources, hasEnoughResources, subtractResources, refreshResources} = useResources();
+    const {fetchTerritories} = useTerritories();
     const [buildInfo, setBuildInfo] = useState<BuildInfo | null>(null);
     const [selectedBuilding, setSelectedBuilding] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const fetchBuildInfo = async () => {
@@ -45,10 +47,28 @@ const ExternalBuildModal: React.FC<ExternalBuildModalProps> = ({territoryId, set
     const canAfford = hasEnoughResources(selectedBuildingData.cost);
 
     const build = async () => {
-        await api.post(`/game/buildings/external/build/`, {
-            territory: territoryId,
-            building_type: selectedBuilding,
-        });
+        if (isSubmitting) {
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await api.post(`/game/buildings/external/build/`, {
+                territory: territoryId,
+                building_type: selectedBuilding,
+            });
+
+            subtractResources(selectedBuildingData.cost);
+            await Promise.all([
+                fetchTerritories(),
+                refreshResources(),
+            ]);
+            setIsOpen(false)
+        } catch (error) {
+            console.error("Failed to build external building:", error);
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     interface ResourceItemProps {
@@ -150,18 +170,15 @@ const ExternalBuildModal: React.FC<ExternalBuildModalProps> = ({territoryId, set
                 {/* Footer / Build Button */}
                 <div className="p-4 border-t border-gray-700">
                     <button
-                        disabled={!canAfford}
+                        disabled={!canAfford || isSubmitting}
                         className={`w-full py-3 px-4 rounded-lg text-lg font-bold transition-all duration-300 transform hover:scale-105
-                            ${canAfford
+                            ${canAfford && !isSubmitting
                             ? 'bg-green-600 hover:bg-green-500 text-white shadow-lg'
                             : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                         }`}
-                        onClick={async () => {
-                            await build()
-                            setIsOpen(false)
-                        }}
+                        onClick={build}
                     >
-                        Build {selectedBuilding.replace("_", " ")}
+                        {isSubmitting ? 'Building...' : `Build ${selectedBuilding.replace("_", " ")}`}
                     </button>
                 </div>
             </div>

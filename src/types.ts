@@ -19,13 +19,14 @@ export interface Unit {
 
 export interface Army {
     id: number;
+    is_moving: boolean;
     from_territory: number;
     to_territory: number;
-    is_moving: boolean;
     movement_progress: number;
     units: Unit[];
-    path_steps: PathStepItem[]; // Added path_steps
-    last_movement_update: number; // Added last_movement_update (timestamp)
+    path_steps: PathStepItem[];
+    last_movement_update: number;
+    owner: number; // id
 }
 
 export interface BuildingDetails {
@@ -83,8 +84,7 @@ export interface Territory {
 }
 
 export interface Player {
-    id: string;
-    // Add other player properties if available
+    id: number;
 }
 
 export interface PixelPos {

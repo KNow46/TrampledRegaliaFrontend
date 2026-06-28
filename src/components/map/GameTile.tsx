@@ -122,7 +122,7 @@ const GameTile: React.FC<GameTileProps> = ({
                     top={0}
                     width={hexWidth}
                     strokeWidth={30}
-                    color={"#FFD700"} // Gold color for path selection
+                    color={"#ffffff"} // Gold color for path selection
                 />
             )}
             {player && territory.owner === player.id && !territory.castle && !territory.building && (

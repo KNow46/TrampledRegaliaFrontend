@@ -8,6 +8,7 @@ import {wasMouseUpPartOfDrag} from "../../functions/utils";
 import type {Territory, Player, PathStepItem, SetPathRequest, Unit} from '../../types';
 import { Army } from './Army';
 import armyImage from '../../../public/images/armyBlue.png';
+import enemyArmyImage from '../../../public/images/armyRed.png';
 import {PathSelection} from "./PathSelection.tsx";
 
 interface GameMapProps {
@@ -220,7 +221,7 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
                             toTerritoryId={army.to_territory}
                             movementProgress={army.movement_progress}
                             hexWidth={hexWidth}
-                            bannerImage={armyImage}
+                            bannerImage={player && army.owner == player.id ? armyImage : enemyArmyImage}
                             territories={territories}
                             hexToPixel={hexToPixel}
                             openSelectionMode={() => setPathSelectionMode(true)}

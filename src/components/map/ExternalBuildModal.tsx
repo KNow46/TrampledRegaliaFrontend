@@ -88,7 +88,7 @@ const ExternalBuildModal: React.FC<ExternalBuildModalProps> = ({territoryId, set
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-20 p-4">
             <div
-                className="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl text-white border-2 border-gray-700 transform transition-all duration-300 ease-in-out scale-95 hover:scale-100">
+                className="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl text-white border-2 border-gray-700 transform transition-all duration-300 ease-in-out hover:scale-100">
                 {/* Header */}
                 <div className="flex justify-between items-center p-4 border-b border-gray-700">
                     <h2 className="text-2xl font-bold text-yellow-400">Build on Territory</h2>
@@ -134,7 +134,7 @@ const ExternalBuildModal: React.FC<ExternalBuildModalProps> = ({territoryId, set
                                 alt={`${selectedBuilding} illustration`}
                                 className="w-32 h-32 object-contain rounded-lg mb-4 bg-gray-800 p-2 border border-gray-700"
                             />
-                            <h3 className="text-2xl font-bold mb-4 text-yellow-300">{selectedBuilding}</h3>
+                            <h3 className="text-2xl font-bold mb-4 text-yellow-300">{selectedBuilding.replace("_", " ")}</h3>
                         </div>
 
                         {/* Production */}
@@ -171,7 +171,7 @@ const ExternalBuildModal: React.FC<ExternalBuildModalProps> = ({territoryId, set
                 <div className="p-4 border-t border-gray-700">
                     <button
                         disabled={!canAfford || isSubmitting}
-                        className={`w-full py-3 px-4 rounded-lg text-lg font-bold transition-all duration-300 transform hover:scale-105
+                        className={`w-full py-3 px-4 rounded-lg text-lg font-bold transition-all duration-300 transform hover:scale-101
                             ${canAfford && !isSubmitting
                             ? 'bg-green-600 hover:bg-green-500 text-white shadow-lg'
                             : 'bg-gray-600 text-gray-400 cursor-not-allowed'

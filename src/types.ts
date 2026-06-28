@@ -130,4 +130,9 @@ export interface SetPathRequest {
     path: PathStepItem[];
 }
 
-
+export interface TerritoryStore {
+    territories: Territory[];
+    loading: boolean;
+    error: boolean | string;
+    fetchTerritories: () => Promise<void>;
+}

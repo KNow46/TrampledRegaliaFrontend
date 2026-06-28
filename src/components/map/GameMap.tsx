@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useRef} from 'react';
 import api from '../../services/api';
-import {getCurrentWorld, useArmies} from "../../functions/data"; // Import useArmies
+import {getCurrentWorld, useArmies, useTerritories} from "../../functions/data";
 import CastleMenu from "./CastleMenu";
 import GameTile from "./GameTile";
 import ExternalBuildModal from "./ExternalBuildModal";
@@ -24,7 +24,9 @@ const hexToPixel = (q: number, r: number, size: number) => {
 };
 
 const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
-    const [territories, setTerritories] = useState<Territory[]>([]);
+    // Territories come from the shared store; they refresh automatically after each army backend sync,
+    // which means ownership changes (conquests) are reflected without any extra manual calls.
+    const {territories, fetchTerritories} = useTerritories();
     const [position, setPosition] = useState({x: 0, y: 0});
     const [wasLastMouseUpPartOfDrag, setWasLastMouseUpPartOfDrag] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
@@ -53,16 +55,8 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
     // Use useArmies hook
     const {armies, loading: armiesLoading, error: armiesError, fetchArmies} = useArmies();
 
-    // Fetch territories and player from the backend
+    // Fetch player info; territories are managed by useTerritories store.
     useEffect(() => {
-        const fetchTerritories = async () => {
-            try {
-                const response = await api.get(`/game/territories/?world_id=${worldId}`);
-                setTerritories(response.data);
-            } catch (error) {
-                console.error('Error fetching territories:', error);
-            }
-        };
         const fetchPlayer = async () => {
             try {
                 const response = await api.get(`/game/player/?world_id=${worldId}`);
@@ -72,7 +66,6 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
             }
         }
 
-        fetchTerritories();
         fetchPlayer();
     }, [worldId]);
 
@@ -152,12 +145,13 @@ const GameMap: React.FC<GameMapProps> = ({hexWidth}) => {
         try {
             await api.post("/game/armies/path-step/", requestBody);
             console.log("Army path set successfully!");
-            // Optionally, refetch territories or update army state
         } catch (error) {
             console.error("Error setting army path:", error);
         } finally {
             setPathSelectionMode(false);
             setSelectedArmyId(null);
+            // Re-fetch armies (triggers backend refresh_position → combat/conquest)
+            // and then territories are refreshed automatically inside fetchArmies.
             fetchArmies();
             setCurrentPath([]);
         }

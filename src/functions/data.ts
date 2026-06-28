@@ -1,6 +1,6 @@
 import {create} from 'zustand'
 import api from "../services/api";
-import type {Resources, Production, ResourceStore, Resource, Army, Territory, Unit, PathStepItem} from '../types';
+import type {Resources, Production, ResourceStore, Resource, Army, Territory, Unit, PathStepItem, TerritoryStore} from '../types';
 
 export const getAuthToken = (): string | null => {
     return localStorage.getItem('access')
@@ -75,6 +75,34 @@ export const useResources = create<ResourceStore>((set, get) => {
     };
 });
 
+// ---------- Territories store ----------
+// Defined before useArmies so armies can trigger a territory refresh after fetching.
+
+export const useTerritories = create<TerritoryStore>((set) => {
+    const fetchTerritories = async () => {
+        const worldId = getCurrentWorld();
+        if (!worldId) return;
+        set({loading: true, error: false});
+        try {
+            const response = await api.get(`/game/territories/?world_id=${worldId}`);
+            set({territories: response.data, loading: false});
+        } catch (err: any) {
+            set({error: err.message, loading: false});
+        }
+    };
+
+    fetchTerritories();
+
+    return {
+        territories: [],
+        loading: false,
+        error: false,
+        fetchTerritories,
+    };
+});
+
+// ---------- Armies store ----------
+
 interface ArmyStore {
     armies: Army[];
     loading: boolean;
@@ -83,33 +111,33 @@ interface ArmyStore {
     setArmies: (armies: Army[]) => void;
 }
 
-export const useArmies = create<ArmyStore>((set, get) => {
-    const updateArmiesTime = 1000; // Update every second
-    let lastUpdate = Date.now();
+// Module-level interval IDs to prevent duplicate intervals across fetchArmies calls.
+let localUpdateIntervalId: ReturnType<typeof setInterval> | null = null;
+let backendRefreshIntervalId: ReturnType<typeof setInterval> | null = null;
 
+/** How often to re-sync army state with the backend (ms).
+ *  Each backend fetch triggers refresh_position() on the server, which resolves combat and conquest. */
+const BACKEND_REFRESH_MS = 15_000;
+
+export const useArmies = create<ArmyStore>((set, get) => {
     const getMovementSpeed = (units: Unit[]): number => {
-        if (!units || units.length === 0) {
-            return 0;
-        }
-        // Get the minimum movement speed from all units in the army
+        if (!units || units.length === 0) return 0;
         return Math.min(...units.map(unit => unit.stats?.movement_speed || 0));
     };
 
     const updateArmyPositions = () => {
         const now = Date.now();
         const {armies} = get();
-        const updatedArmies = armies.map(army => {
-            if (!army.is_moving) {
-                return army;
-            }
-            let currentArmy = {...army};
-            // Use the last_movement_update from the army object, or initialize if not present
-            const lastUpdateTimestamp = currentArmy.last_movement_update || now;
-            const elapsed = (now - lastUpdateTimestamp) / 1000; // elapsed in seconds
+        let needsBackendRefresh = false;
 
-            if (elapsed <= 0) {
-                return army;
-            }
+        const updatedArmies: Army[] = armies.map(army => {
+            if (!army.is_moving) return army;
+
+            let currentArmy = {...army, path_steps: [...army.path_steps]};
+            const lastUpdateTimestamp = currentArmy.last_movement_update || now;
+            const elapsed = (now - lastUpdateTimestamp) / 1000; // seconds
+
+            if (elapsed <= 0) return army;
 
             let remainingTime = elapsed;
 
@@ -117,46 +145,51 @@ export const useArmies = create<ArmyStore>((set, get) => {
                 const movementSpeed = getMovementSpeed(currentArmy.units);
                 if (movementSpeed === 0) {
                     currentArmy.is_moving = false;
+                    needsBackendRefresh = true;
                     break;
                 }
-                const speedPerSecond = movementSpeed / 3600; // Assuming movement_speed is distance per hour
-
+                const speedPerSecond = movementSpeed / 3600;
                 const distanceLeft = 1.0 - currentArmy.movement_progress;
                 const timeToFinishSegment = distanceLeft / speedPerSecond;
 
                 if (remainingTime >= timeToFinishSegment) {
-                    // Army finishes current segment
+                    // Army finishes this movement segment → arrives at to_territory
                     currentArmy.from_territory = currentArmy.to_territory;
                     currentArmy.movement_progress = 0.0;
                     remainingTime -= timeToFinishSegment;
 
-                    // Assuming path_steps is part of the army object from the backend
-                    // And that path_steps is an array of territory IDs or objects with territory_id
-                    if (currentArmy.path_steps && currentArmy.path_steps.length > 0) {
-                        const nextStep = currentArmy.path_steps.shift(); // Remove the first step
-                        if (nextStep) {
-                            currentArmy.to_territory = nextStep.territory_id;
-                            if (nextStep.target_progress !== undefined && nextStep.target_progress < 1) {
-                                currentArmy.movement_progress = nextStep.target_progress;
-                                currentArmy.is_moving = false;
-                            }
-                        } else {
-                            currentArmy.is_moving = false; // No more steps
+                    if (currentArmy.path_steps.length > 0) {
+                        const nextStep = currentArmy.path_steps.shift()!;
+                        currentArmy.to_territory = nextStep.territory_id;
+                        if (nextStep.target_progress !== undefined && nextStep.target_progress < 1) {
+                            currentArmy.movement_progress = nextStep.target_progress;
+                            currentArmy.is_moving = false;
+                            // Army stopped at an intermediate point — sync with backend
+                            needsBackendRefresh = true;
                         }
                     } else {
-                        currentArmy.is_moving = false; // No path steps defined
+                        // No more steps — army reached its final destination
+                        currentArmy.is_moving = false;
+                        // Backend needs to resolve any combat / conquest at this territory
+                        needsBackendRefresh = true;
                     }
                 } else {
-                    // Army moves partially within the current segment
                     currentArmy.movement_progress += remainingTime * speedPerSecond;
                     remainingTime = 0;
                 }
             }
+
             currentArmy.movement_progress = Math.min(currentArmy.movement_progress, 1.0);
-            currentArmy.last_movement_update = now; // Update last_movement_update after processing
+            currentArmy.last_movement_update = now;
             return currentArmy;
         });
+
         set({armies: updatedArmies});
+
+        if (needsBackendRefresh) {
+            // Small delay to ensure the backend has processed the movement tick
+            setTimeout(() => fetchArmies(), 600);
+        }
     };
 
     const fetchArmies = async () => {
@@ -167,12 +200,26 @@ export const useArmies = create<ArmyStore>((set, get) => {
             const response = await api.get(`/game/armies/?world_id=${worldId}`);
             const fetchedArmies: Army[] = response.data.map((army: any) => ({
                 ...army,
-                // Initialize last_movement_update if not provided by backend, or convert from string to number
-                last_movement_update: army.last_movement_update ? new Date(army.last_movement_update).getTime() : Date.now(),
-                path_steps: army.path_steps || [], // Ensure path_steps is an array
+                last_movement_update: army.last_movement_update
+                    ? new Date(army.last_movement_update).getTime()
+                    : Date.now(),
+                path_steps: army.path_steps || [],
             }));
             set({armies: fetchedArmies, loading: false});
-            setInterval(updateArmyPositions, updateArmiesTime);
+
+            // After every backend fetch the server has resolved combat and potential conquests,
+            // so we also refresh territories to reflect ownership changes.
+            useTerritories.getState().fetchTerritories();
+
+            // Start local position update interval exactly once.
+            if (!localUpdateIntervalId) {
+                localUpdateIntervalId = setInterval(updateArmyPositions, 1000);
+            }
+
+            // Start periodic backend re-sync interval exactly once.
+            if (!backendRefreshIntervalId) {
+                backendRefreshIntervalId = setInterval(fetchArmies, BACKEND_REFRESH_MS);
+            }
         } catch (err: any) {
             set({error: err.message, loading: false});
         }
@@ -188,7 +235,3 @@ export const useArmies = create<ArmyStore>((set, get) => {
         setArmies: (armies: Army[]) => set({armies}),
     };
 });
-
-
-
-
